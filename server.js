@@ -25,10 +25,6 @@ app.use(express.json()); // REQUIRED for POST / PUT JSON body
  * ======================
  */
 app.get("/", (req, res) => {
-  res.send("cGxP Pharma Backend API is running");
-});
-
-app.get("/", (req, res) => {
   res.status(200).send("cGxP Pharma Backend API is running");
 });
 
@@ -52,10 +48,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  * ======================
  */
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
   })
