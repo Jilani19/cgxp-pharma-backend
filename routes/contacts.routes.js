@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const Contact = require("../models/Contact");
 
 const router = express.Router();
@@ -12,23 +13,24 @@ const router = express.Router();
  *     summary: Fetch pharma contacts
  *     description: |
  *       Fetch all contacts from the database.
- *       Supports optional query parameters for limit and search.
- *       Client-side pagination is handled by AG Grid on the frontend.
+ *       Supports optional query parameters for limit, search, and sort.
+ *       Client-side pagination is handled by AG Grid.
  *     parameters:
  *       - in: query
  *         name: limit
- *         required: false
  *         schema:
  *           type: integer
  *           example: 100
- *         description: Limit number of records returned
  *       - in: query
  *         name: search
- *         required: false
  *         schema:
  *           type: string
  *           example: Pfizer
- *         description: Search by name or company
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           example: company
  *     responses:
  *       200:
  *         description: Contacts fetched successfully
@@ -39,10 +41,8 @@ const router = express.Router();
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 total:
  *                   type: integer
- *                   example: 500
  *                 data:
  *                   type: array
  *                   items:
@@ -52,11 +52,10 @@ const router = express.Router();
  */
 router.get("/", async (req, res) => {
   try {
-    const { limit, search } = req.query;
+    const { limit, search, sort } = req.query;
 
     let query = {};
 
-    // Optional search by name or company
     if (search) {
       query = {
         $or: [
@@ -68,7 +67,10 @@ router.get("/", async (req, res) => {
 
     let dbQuery = Contact.find(query);
 
-    // Optional limit
+    if (sort) {
+      dbQuery = dbQuery.sort({ [sort]: 1 });
+    }
+
     if (limit) {
       dbQuery = dbQuery.limit(Number(limit));
     }
@@ -96,17 +98,13 @@ router.get("/", async (req, res) => {
  *     tags:
  *       - Contacts
  *     summary: Update a contact (inline edit)
- *     description: |
- *       Updates one or more fields of a contact.
- *       Used by AG Grid inline edit functionality.
+ *     description: Updates editable fields of a contact.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: MongoDB ObjectId of the contact
  *         schema:
  *           type: string
- *           example: 64f1c8a9a2e4c1b9d1234567
  *     requestBody:
  *       required: true
  *       content:
@@ -120,7 +118,7 @@ router.get("/", async (req, res) => {
  *       200:
  *         description: Contact updated successfully
  *       400:
- *         description: No update data provided
+ *         description: Invalid input
  *       404:
  *         description: Contact not found
  *       500:
@@ -131,6 +129,13 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid contact ID",
+      });
+    }
+
     if (!updates || Object.keys(updates).length === 0) {
       return res.status(400).json({
         success: false,
@@ -138,9 +143,29 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    // Allow only safe editable fields
+    const allowedFields = [
+      "name",
+      "title",
+      "level",
+      "company",
+      "email",
+      "phone",
+      "linkedin",
+      "email_check_status",
+      "linkedin_check_status",
+    ];
+
+    const safeUpdates = {};
+    allowedFields.forEach((field) => {
+      if (updates[field] !== undefined) {
+        safeUpdates[field] = updates[field];
+      }
+    });
+
     const updatedContact = await Contact.findByIdAndUpdate(
       id,
-      { $set: updates },
+      { $set: safeUpdates },
       { new: true, runValidators: true }
     );
 

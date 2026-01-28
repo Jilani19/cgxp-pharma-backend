@@ -12,6 +12,7 @@ const ContactSchema = new mongoose.Schema(
     name: {
       type: String,
       trim: true,
+      index: true,
     },
     title: {
       type: String,
@@ -24,6 +25,7 @@ const ContactSchema = new mongoose.Schema(
     company: {
       type: String,
       trim: true,
+      index: true,
     },
 
     // Contact info
@@ -31,6 +33,8 @@ const ContactSchema = new mongoose.Schema(
       type: String,
       trim: true,
       lowercase: true,
+      index: true,
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
     phone: {
       type: String,
@@ -66,24 +70,17 @@ const ContactSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Check dates (use Date, not String)
+    // Check dates
     email_check_date: {
       type: Date,
     },
     linkedin_check_date: {
       type: Date,
     },
-
-    // Excel audit fields (keep but optional)
-    created_at: {
-      type: Date,
-    },
-    updated_at: {
-      type: Date,
-    },
   },
   {
-    timestamps: true, // MongoDB createdAt & updatedAt
+    timestamps: true, // creates createdAt & updatedAt automatically
+    collection: "contacts", // explicit collection name
   }
 );
 
