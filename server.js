@@ -13,10 +13,41 @@ const app = express();
 
 /**
  * ======================
- * GLOBAL MIDDLEWARES
+ * CORS CONFIG (FIX)
  * ======================
  */
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://cgxppharma.chickenkiller.com",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS not allowed"), false);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+// IMPORTANT: preflight
+app.options("*", cors());
+
+/**
+ * ======================
+ * MIDDLEWARES
+ * ======================
+ */
 app.use(express.json());
 
 /**
@@ -37,40 +68,34 @@ app.use("/api/contacts", contactsRoutes);
 
 /**
  * ======================
- * SWAGGER DOCS
+ * SWAGGER
  * ======================
  */
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
-);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /**
  * ======================
- * MONGODB CONNECTION
+ * MONGODB
  * ======================
  */
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-  })
+  .then(() => console.log("MongoDB connected"))
   .catch((err) => {
-    console.error("MongoDB connection error:", err);
+    console.error("MongoDB error:", err);
     process.exit(1);
   });
 
 /**
  * ======================
- * GLOBAL ERROR HANDLER
+ * ERROR HANDLER
  * ======================
  */
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
+  console.error("Unhandled error:", err.message);
   res.status(500).json({
     success: false,
-    message: "Internal Server Error",
+    message: err.message || "Internal Server Error",
   });
 });
 
@@ -80,7 +105,6 @@ app.use((err, req, res, next) => {
  * ======================
  */
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
