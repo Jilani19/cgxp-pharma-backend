@@ -8,6 +8,7 @@ const SERVER_URL =
 module.exports = swaggerJsdoc({
   definition: {
     openapi: "3.0.0",
+
     info: {
       title: "cGxP Pharma Contacts API",
       version: "1.0.0",
@@ -66,8 +67,14 @@ Tech Stack:
             unlocked_company: { type: "boolean" },
             email_check_status: { type: "string" },
             linkedin_check_status: { type: "string" },
-            createdAt: { type: "string", format: "date-time" },
-            updatedAt: { type: "string", format: "date-time" },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+            },
           },
         },
       },

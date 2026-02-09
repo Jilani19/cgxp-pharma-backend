@@ -17,11 +17,11 @@ const app = express();
  * ======================
  */
 app.use(cors());
-app.use(express.json()); // REQUIRED for POST / PUT JSON body
+app.use(express.json());
 
 /**
  * ======================
- * HEALTH CHECK (ROOT)
+ * HEALTH CHECK
  * ======================
  */
 app.get("/", (req, res) => {
@@ -40,7 +40,11 @@ app.use("/api/contacts", contactsRoutes);
  * SWAGGER DOCS
  * ======================
  */
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 /**
  * ======================
@@ -76,6 +80,7 @@ app.use((err, req, res, next) => {
  * ======================
  */
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });

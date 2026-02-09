@@ -2,13 +2,17 @@ const mongoose = require("mongoose");
 
 const ContactSchema = new mongoose.Schema(
   {
+    // =========================
     // Excel / External reference
+    // =========================
     externalId: {
       type: Number,
       index: true,
     },
 
+    // =========================
     // Core profile info
+    // =========================
     name: {
       type: String,
       trim: true,
@@ -28,7 +32,9 @@ const ContactSchema = new mongoose.Schema(
       index: true,
     },
 
+    // =========================
     // Contact info
+    // =========================
     email: {
       type: String,
       trim: true,
@@ -41,7 +47,9 @@ const ContactSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // =========================
     // Social
+    // =========================
     linkedin: {
       type: String,
       trim: true,
@@ -51,7 +59,9 @@ const ContactSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // =========================
     // Status flags
+    // =========================
     unlocked: {
       type: Boolean,
       default: false,
@@ -70,7 +80,9 @@ const ContactSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // =========================
     // Check dates
+    // =========================
     email_check_date: {
       type: Date,
     },
@@ -79,8 +91,8 @@ const ContactSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // creates createdAt & updatedAt automatically
-    collection: "contacts", // explicit collection name
+    timestamps: true, // creates createdAt & updatedAt
+    collection: "contacts",
   }
 );
 
