@@ -52,42 +52,44 @@ const router = express.Router();
  */
 router.get("/", async (req, res) => {
   try {
-    const { limit, search, sort } = req.query;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 50;
+    const search = req.query.search || "";
+    const sort = req.query.sort || "createdAt";
+
+    const skip = (page - 1) * limit;
 
     let query = {};
-
     if (search) {
       query = {
         $or: [
-          { name: { $regex: search, $options: "i" } },
-          { company: { $regex: search, $options: "i" } },
+          { name: { $regex: `^${search}`, $options: "i" } },
+          { company: { $regex: `^${search}`, $options: "i" } },
         ],
       };
     }
 
-    let dbQuery = Contact.find(query);
+    const [data, total] = await Promise.all([
+      Contact.find(query)
+        .select("name title level company email phone") // 👈 IMPORTANT
+        .sort({ [sort]: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
 
-    if (sort) {
-      dbQuery = dbQuery.sort({ [sort]: 1 });
-    }
-
-    if (limit) {
-      dbQuery = dbQuery.limit(Number(limit));
-    }
-
-    const contacts = await dbQuery.lean();
+      Contact.countDocuments(query),
+    ]);
 
     res.json({
       success: true,
-      total: contacts.length,
-      data: contacts,
+      page,
+      limit,
+      total,
+      data,
     });
   } catch (error) {
-    console.error("Error fetching contacts:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch contacts",
-    });
+    console.error(error);
+    res.status(500).json({ success: false });
   }
 });
 
